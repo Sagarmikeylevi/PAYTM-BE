@@ -12,6 +12,11 @@ const userProfileSchema = z.object({
   password: z.string().min(6).max(255),
 });
 
+const updateUserProfileSchema = z.object({
+  username: z.string().min(1).max(50).optional(),
+  password: z.string().min(6).max(255).optional(),
+});
+
 export const registation = async (req: Request, res: Response) => {
   try {
     // 1. Zod Validation
@@ -43,7 +48,7 @@ export const registation = async (req: Request, res: Response) => {
     );
 
     // 5. return response
-    return res.status(201).json(user.rows[0]);
+    return res.status(201).json({ User: user.rows[0] });
   } catch (error) {
     return res.status(500).json({ error: "Internal Server Error" });
   }
@@ -79,7 +84,48 @@ export const login = async (req: Request, res: Response) => {
       expiresIn: "1h",
     });
 
+    // 4. return response
     return res.status(200).json({ token: token });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const updateUser = async (req: Request, res: Response) => {
+  try {
+    // 1. Zod Validation
+    const { success } = updateUserProfileSchema.safeParse(req.body);
+
+    if (!success) {
+      return res.status(400).json({ error: "Invalid User Data" });
+    }
+
+    // 2. Get the user Id and search for the user
+    const userId = req.user.userId;
+
+    const user = await pool.query("SELECT * FROM users WHERE id = $1", [
+      userId,
+    ]);
+
+    if (user.rows.length === 0) {
+      return res.status(404).json({ error: "User Not Found" });
+    }
+
+    let { username = user.rows[0].username, password = user.rows[0].password } =
+      req.body;
+
+    // 3. Hash the password
+    if (password !== user.rows[0].password) {
+      password = await bcrypt.hash(password, 10);
+    }
+    // 4. Update
+    const updatedUser = await pool.query(
+      "UPDATE users SET username=$1, password=$2 WHERE id = $3 RETURNING *",
+      [username, password, userId]
+    );
+
+    // 4. return response
+    return res.status(200).json({ UpdatedUser: updatedUser.rows[0] });
   } catch (error) {
     return res.status(500).json({ error: "Internal Server Error" });
   }
