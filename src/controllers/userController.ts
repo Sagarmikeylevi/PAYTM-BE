@@ -155,3 +155,29 @@ export const getAllUsers = async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+export const filterByUsername = async (req: Request, res: Response) => {
+  try {
+    const { username } = req.query;
+    // Fetch users by username
+    const users = await pool.query(
+      "SELECT * FROM users WHERE username LIKE '%$1%'",
+      [username]
+    );
+
+    if (users.rows.length === 0) {
+      return res.status(404).json({ error: "No user found" });
+    }
+
+    // customize the user array
+    const usersArray = users.rows.map((user) => ({
+      username: user.username,
+      email: user.email,
+    }));
+
+    // return response
+    return res.status(200).json({ users: usersArray });
+  } catch (error) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
