@@ -3,6 +3,8 @@ import pool from "../database/db.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import z from "zod";
+import dotenv from "dotenv";
+dotenv.config();
 
 const userProfileSchema = z.object({
   username: z.string().min(1).max(50),
@@ -42,6 +44,42 @@ export const registation = async (req: Request, res: Response) => {
 
     // 5. return response
     return res.status(201).json(user.rows[0]);
+  } catch (error) {
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    // 1. Check if user exits
+    const user = await pool.query("SELECT * FROM users WHERE email = $1", [
+      email,
+    ]);
+
+    if (user.rows.length === 0) {
+      return res.status(404).json({ error: "User Not Found" });
+    }
+
+    // 2. Compare Password
+    const passwordMatch = await bcrypt.compare(password, user.rows[0].password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Invalid Password" });
+    }
+
+    // 3. Generate JWT Token
+    const jwtSecret = `${process.env.JWT_SECRET}`;
+    const tokenPayload = {
+      userId: user.rows[0].id,
+      username: user.rows[0].username,
+      email: user.rows[0].email,
+    };
+    const token = jwt.sign(tokenPayload, jwtSecret, {
+      expiresIn: "1h",
+    });
+
+    return res.status(200).json({ token: token });
   } catch (error) {
     return res.status(500).json({ error: "Internal Server Error" });
   }
