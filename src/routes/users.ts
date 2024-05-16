@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  getAllUsers,
   login,
   registation,
   updateUser,
@@ -11,5 +12,6 @@ const userRouter = Router();
 userRouter.post("/register", registation);
 userRouter.post("/login", login);
 userRouter.put("/update", authorize, updateUser);
+userRouter.get("/get-all-users", authorize, getAllUsers);
 
 export default userRouter;
