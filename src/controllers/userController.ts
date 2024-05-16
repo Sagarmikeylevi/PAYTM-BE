@@ -120,7 +120,7 @@ export const updateUser = async (req: Request, res: Response) => {
     }
     // 4. Update
     const updatedUser = await pool.query(
-      "UPDATE users SET username=$1, password=$2 WHERE id = $3 RETURNING *",
+      "UPDATE users SET username=$1, password=$2, update_date = CURRENT_TIMESTAMP  WHERE id = $3 RETURNING *",
       [username, password, userId]
     );
 
