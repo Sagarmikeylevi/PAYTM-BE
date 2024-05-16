@@ -111,17 +111,30 @@ export const updateUser = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "User Not Found" });
     }
 
-    let { username = user.rows[0].username, password = user.rows[0].password } =
-      req.body;
+    let {
+      password,
+      username = user.rows[0].username,
+      newpassword = user.rows[0].password,
+    } = req.body;
 
-    // 3. Hash the password
-    if (password !== user.rows[0].password) {
-      password = await bcrypt.hash(password, 10);
+    // 3. password authentication
+    if (!password) {
+      return res.status(401).json({ error: "Invalid Password" });
     }
-    // 4. Update
+    const passwordMatch = await bcrypt.compare(password, user.rows[0].password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Invalid Password" });
+    }
+
+    // 4. Hash the password
+    if (newpassword !== user.rows[0].password) {
+      newpassword = await bcrypt.hash(newpassword, 10);
+    }
+    // 5. Update
     const updatedUser = await pool.query(
       "UPDATE users SET username=$1, password=$2, update_date = CURRENT_TIMESTAMP  WHERE id = $3 RETURNING *",
-      [username, password, userId]
+      [username, newpassword, userId]
     );
 
     // 4. return response
