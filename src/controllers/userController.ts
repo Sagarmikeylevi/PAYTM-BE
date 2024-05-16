@@ -47,8 +47,15 @@ export const registation = async (req: Request, res: Response) => {
       [username, email, hasedPassword]
     );
 
-    // 5. return response
-    return res.status(201).json({ User: user.rows[0] });
+    // 5. Initialize balances on registation
+    const bankDetails = await pool.query(
+      "INSERT INTO bank (userId, balance) VALUES ($1, $2) RETURNING *",
+      [user.rows[0].id, Math.floor(Math.random() * (10000 - 1000 + 1)) + 1000]
+    );
+    // 6. return response
+    return res
+      .status(201)
+      .json({ User: user.rows[0], Bank: bankDetails.rows[0] });
   } catch (error) {
     return res.status(500).json({ error: "Internal Server Error" });
   }
