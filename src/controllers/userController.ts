@@ -161,8 +161,8 @@ export const filterByUsername = async (req: Request, res: Response) => {
     const { username } = req.query;
     // Fetch users by username
     const users = await pool.query(
-      "SELECT * FROM users WHERE username LIKE '%$1%'",
-      [username]
+      "SELECT * FROM users WHERE username LIKE $1",
+      [`%${username}%`]
     );
 
     if (users.rows.length === 0) {
