@@ -154,7 +154,10 @@ export const updateUser = async (req: Request, res: Response) => {
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     // 1. Fetch all users
-    const users = await pool.query("SELECT * FROM users");
+    const users = await pool.query(`
+    SELECT * FROM users 
+    JOIN bank ON users.id = bank.userid 
+    `);
 
     // 2. return response
     return res.status(200).json({ Users: users.rows });

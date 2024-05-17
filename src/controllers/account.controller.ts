@@ -67,13 +67,13 @@ export const transferMoney = async (req: Request, res: Response) => {
 
     // deduct money from sender
     const updatedSenderBalance = await pool.query(
-      "UPDATE bank SET balance = $1 WHERE id = $2 RETURNING balance",
+      "UPDATE bank SET balance = $1, update_date = CURRENT_TIMESTAMP WHERE id = $2 RETURNING balance",
       [senderAccount.rows[0].balance - amount, senderAccount.rows[0].id]
     );
 
     // add money to recivder
     const updatedReciverBalance = await pool.query(
-      "UPDATE bank SET balance = $1 WHERE id = $2 RETURNING balance",
+      "UPDATE bank SET balance = $1, update_date = CURRENT_TIMESTAMP WHERE id = $2 RETURNING balance",
       [+reciverAccount.rows[0].balance + amount, reciverAccount.rows[0].id]
     );
 
@@ -90,6 +90,7 @@ export const transferMoney = async (req: Request, res: Response) => {
     });
   } catch (error) {
     await pool.query("ROLLBACK");
-    return res.status(500).json({ error: "Internal Server Error" });
+    console.log(error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
