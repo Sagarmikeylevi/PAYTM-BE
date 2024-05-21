@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import KeycloakAdminClient from "@keycloak/keycloak-admin-client";
 import pool from "../database/db.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
@@ -52,6 +53,10 @@ export const registation = async (req: Request, res: Response) => {
       "INSERT INTO bank (userId, balance) VALUES ($1, $2) RETURNING *",
       [user.rows[0].id, Math.floor(Math.random() * (10000 - 1000 + 1)) + 1000]
     );
+
+    // Keyclock authentication
+
+    // Keyclock authentication end
     // 6. return response
     return res
       .status(201)

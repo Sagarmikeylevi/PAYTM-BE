@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import pool from "../database/db";
+import pool from "../database/db.js";
 import z from "zod";
 
 const TransferSchema = z.object({
